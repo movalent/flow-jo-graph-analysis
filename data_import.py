@@ -83,13 +83,18 @@ tidy_df = pd.read_excel(cwd / tidy_file, engine='calamine')
 # FlowJo saves values as strings, converting to float
 cols_to_parse = ['%viability', '%GFP-only', '%CHE-only', '%co-transfected']
 for col in cols_to_parse:
-  exp_df[col] = (exp_df[col]
+    if col not in exp_df.columns:
+        continue
+
+    exp_df[col] = (exp_df[col]
              .astype(str)
              .str.replace('%', '')
              .str.strip()
              .replace('n/a', pd.NA)
              .astype(float)
              )
+
+    exp_df.loc[exp_df[col] < 0.6, col] = 0  # Removing single incorrect events from gates
 
 # Extract time point and experiment code from file name
 filename_parsed = parse_filename(exp_file)
