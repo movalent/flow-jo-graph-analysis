@@ -42,7 +42,7 @@ def parse_samplename(samplename: str) -> dict:
     return {'lipo_ratio, 1:': lipo,
             'dna_dose, ng': dna_dose,
             'mrna_dose, ng': rna_dose,
-            'cell_count': cell_no
+            'cells_no': cell_no
             }
 
 def parse_filename(filename: str) -> dict:
@@ -74,7 +74,7 @@ def parse_filename(filename: str) -> dict:
 cwd = Path(__file__).parent
 
 # Load input experiment and master data file
-exp_file = '468-040-01-Exp3_24h_26-11-17.xls'
+exp_file = '468-040-01-Exp4_24h_26-11-24.xls'
 tidy_file = '468-040-01_tidy_data.xlsx'
 
 exp_df = pd.read_excel(cwd / exp_file, engine='calamine')
@@ -111,7 +111,7 @@ for _, row in exp_df.iterrows():
       **parsed,
       **filename_parsed,
       '%viability': row.get('%viability'),
-      'cel_count':  row.get('count'),
+      'cell_count':  row.get('count'),
       'GFP_%':      row.get('%GFP-only'),
       'GFP_mfi':    row.get('GFP+_mfi'),
       'CHER_%':     row.get('%CHE-only'),
