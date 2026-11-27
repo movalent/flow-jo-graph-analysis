@@ -7,8 +7,9 @@ from pathlib import Path
 # Settings
 cwd = Path(__file__).parent
 
-response = 'GFP_%'
+response = 'GFP% total'
 ylabel = '% eGFP+'
+cells_no = 80000
 lipo_ratio = 3
 
 # Load data
@@ -18,6 +19,7 @@ df['mrna_dose, ng'] = df['mrna_dose, ng'].fillna(0)
 
 # Filter for lipofectamine
 plot_df = df[(df['lipo_ratio, 1:'] == lipo_ratio)]
+plot_df = plot_df[(plot_df['cell_count'] == cells_no)]
 
 sample_order = [
      {'label': 'Mock',
@@ -26,9 +28,9 @@ sample_order = [
       'mrna': 0
       },
 
-     {'label': 'Lipofectamine 1:3',
+     {'label': f'Lipofectamine 1:{lipo_ratio}',
       'filter': plot_df['fccs_sample_name'].str.contains('03_Mock', case=False, na=False),
-        'dna': 0,
+      'dna': 0,
       'mrna': 0
       },
 
@@ -40,6 +42,11 @@ sample_order = [
       {'label': '0/100',
       'dna': 0,
       'mrna': 100
+      },
+
+        {'label': '100/0',
+      'dna': 100,
+      'mrna': 0
       },
 
       {'label': '100/50',
@@ -69,10 +76,12 @@ mean48 = []
 replicates24 = []
 replicates48 = []
 
+sd24 = []
+sd48 = []
+
 tick_labels = []
 
 for sample in sample_order:
-    print(sample['dna'], sample['mrna'])
 
     if 'filter' in sample:
 
@@ -102,11 +111,19 @@ for sample in sample_order:
     mean24.append(subset24[response].mean())
     mean48.append(subset48[response].mean())
 
+    sd24.append(
+        subset24[response].std()
+        if len(subset24) > 0
+        else 0
+        )
+    sd48.append(
+        subset48[response].std()
+        if len(subset48) > 0
+        else 0
+        )
+
     replicates24.append(subset24[response].values)
     replicates48.append(subset48[response].values)
-
-print(subset24)
-print(replicates24)
 
 labels = [sample['label'] for sample in sample_order]
 tick_labels = [sample['label'] for sample in sample_order]
@@ -123,7 +140,14 @@ bars24 = ax.bar(
     mean24,
     width=w,
     color='lightgreen',
-    label='24h'
+    label='24h',
+    edgecolor='black',
+    yerr=sd24,
+    capsize=4,
+    error_kw={
+         'elinewidth': 1.2,
+         'capsize': 4
+         }
     )
 
 bars48 = ax.bar(
@@ -131,37 +155,45 @@ bars48 = ax.bar(
     mean48,
     width=w,
     color='green',
-    label='48h'
+    label='48h',
+    edgecolor='black',
+    yerr=sd24,
+    capsize=4,
+    error_kw={
+         'elinewidth': 1.2,
+         'capsize': 4
+         }
     )
 
+
 # Technical replicates
-for i, vals in enumerate(replicates24):
+# for i, vals in enumerate(replicates24):
 
-    if len(vals) == 0:
-        continue
+#     if len(vals) == 0:
+#         continue
 
-    jitter = np.linspace(-0.05, 0.05, len(vals))
-    ax.scatter(
-        np.repeat(x[i] - w/2, len(vals)) + jitter,
-        vals,
-        color='black',
-        s=25,
-        zorder=10
-        )
+#     jitter = np.linspace(-0.05, 0.05, len(vals))
+#     ax.scatter(
+#         np.repeat(x[i] - w/2, len(vals)) + jitter,
+#         vals,
+#         color='black',
+#         s=10,
+#         zorder=10
+#         )
 
-for i, vals in enumerate(replicates48):
+# for i, vals in enumerate(replicates48):
 
-    if len(vals) == 0:
-            continue
+#     if len(vals) == 0:
+#             continue
 
-    jitter = np.linspace(-0.05, 0.05, len(vals))
-    ax.scatter(
-        np.repeat(x[i] + w/2, len(vals)) + jitter,
-        vals,
-        color='black',
-        s=25,
-        zorder=10
-        )
+#     jitter = np.linspace(-0.05, 0.05, len(vals))
+#     ax.scatter(
+#         np.repeat(x[i] + w/2, len(vals)) + jitter,
+#         vals,
+#         color='black',
+#         s=10,
+#         zorder=10
+#         )
 
 # Axes formatting
 ax.set_title(f'Lipofectamine 1:{lipo_ratio}')
@@ -176,7 +208,9 @@ ax.set_xticklabels(tick_labels)
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 
-ax.grid(axis='y', alpha=0.3)
+ax.tick_params("x", rotation=45, rotation_mode="xtick")
+
+ax.grid(axis='y',which='major',color='gray',alpha=0.25,linewidth=0.8)
 ax.legend(loc='upper left', frameon=False)
 
 # DNA group labels
@@ -191,7 +225,7 @@ for dna in dna_doses:
 
     ax.plot(
         [start, end],
-        [-0.12, -0.12],
+        [-0.22, -0.22],
         transform=ax.get_xaxis_transform(),
         clip_on=False,
         color='black'
@@ -199,8 +233,8 @@ for dna in dna_doses:
 
     ax.text(
         center,
-        -0.18,
-        f'{dna} ng',
+        -0.3,
+        f'{dna} ng dbDNA',
         transform=ax.get_xaxis_transform(),
         ha='center',
         fontsize=11
@@ -215,15 +249,8 @@ ax.text(
     ha='center'
 )
 
-ax.text(
-    0.5,
-    -0.28,
-    'DNA dose',
-    transform=ax.transAxes,
-    ha='center'
-)
+plt.subplots_adjust(bottom=0.3)
 
-plt.subplots_adjust(bottom=0.28)
 
 plt.tight_layout()
 plt.show()
