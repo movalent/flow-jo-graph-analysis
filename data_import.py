@@ -74,7 +74,7 @@ def parse_filename(filename: str) -> dict:
 cwd = Path(__file__).parent
 
 # Load input experiment and master data file
-exp_file = '468-040-01-Exp4_24h_26-11-24.xls'
+exp_file = '468-040-01-Exp3_24h_26-11-17.xls'
 tidy_file = '468-040-01_tidy_data.xlsx'
 
 exp_df = pd.read_excel(cwd / exp_file, engine='calamine')
@@ -126,8 +126,7 @@ for _, row in exp_df.iterrows():
         exists = (
         (tidy_df['%viability'] == tidy_row['%viability']) &
         (tidy_df['GFP_%'] == tidy_row['GFP_%']) &
-        (tidy_df['CHER_%'] == tidy_row['CHER_%']) &
-        (tidy_df['cotrans_%'] == tidy_row['cotrans_%'])
+        (tidy_df['cell_count'] == tidy_row['cell_count'])
         ).any()
 
     if not exists:
